@@ -30,7 +30,8 @@ def slice_task(path, subject_id, task_id):
             data_perT = dataframe.iloc[events[i][0]:events[i+1][0], 1:].values
         label_perT = get_label(task_id, events[i][2])
         data_array = np.array(data_perT)
-        np.savez_compressed('../data/' + str(subject_id).zfill(3) + '/' + str(task_id).zfill(2) + '/' + str(label_perT) + '_' + str(i).zfill(2) + '.npz', data=data_array)
+        # np.savez_compressed('../data/' + str(subject_id).zfill(3) + '/' + str(task_id).zfill(2) + '/' + str(label_perT) + '_' + str(i).zfill(2) + '.npz', data=data_array)
+        np.savez_compressed(f"../data/{subject_id:03d}/{task_id:02d}/{label_perT}_{i:02d}.npz", data=data_array)
 
 
 if __name__ == "__main__":
