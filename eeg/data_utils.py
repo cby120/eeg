@@ -132,9 +132,50 @@ class EEGDataset(Dataset):
 
 
 def get_random_subset(dataset: Dataset, n_samples: int):
+    """
+    Random Sampled dataset subset
+    :param dataset: 
+    :param n_samples: 
+    :return: Subset randomly sampled from dataset
+    """
     sample_ind = list(RandomSampler(dataset, num_samples=n_samples))
     # print(sample_ind)
     return Subset(dataset, sample_ind)
+
+
+def trim_last(batch):
+    """_summary_
+    collate_fn for dataloader
+    :param batch: _description_
+    :type batch: _type_
+    :return: _description_
+    :rtype: _type_
+    """
+    x_list, y_list = tuple(zip(*batch))
+    x_list: List[torch.Tensor]  # [T, C]
+    len_list = np.array(list(_.size(0) for _ in x_list))
+    min_len = len_list.min()
+    x_list_ = [_[:min_len] for _ in x_list]
+    return torch.stack(x_list_), torch.stack(y_list)
+    
+
+def trim_symm(batch):
+    """
+    collate_fn for dataloader
+    :param batch: List[Tuple[x, y], ...]
+    :return: batched data
+    """
+    x_list, y_list = tuple(zip(*batch))
+    x_list: List[torch.Tensor]  # [T, C]
+    # print(x_list[0].shape)
+    len_list = np.array(list(_.size(0) for _ in x_list))
+    # print(len_list)
+    min_len = len_list.min()
+    dl = len_list - min_len
+    ltil = dl // 2  # list_trim_index_left
+    ltir = len_list - dl + ltil
+    x_list_ = [_[til: tir] for _, til, tir in zip(x_list, ltil, ltir)]
+    return torch.stack(x_list_), torch.stack(y_list)
 
 
 if __name__ == "__main__":
@@ -142,4 +183,8 @@ if __name__ == "__main__":
     # dataset = EEGDatasetHYB('../../data', 'subject', subjects=[1])
     # dataset = EEGDatasetHYB('../../data', 'task', subjects=[1], tasks=[3,4])
     dataset = EEGDataset("../data", subjects=[1, 2, 3], tasks=[2, 3, 4])
-    print(len(dataset))
+    # print(len(dataset))
+    
+    # dl = DataLoader(dataset, 10, collate_fn=trim_symm)
+    dl = DataLoader(dataset, 10, collate_fn=trim_last)
+    print(next(iter(dl)))
