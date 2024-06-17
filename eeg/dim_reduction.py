@@ -4,6 +4,8 @@ import torch
 import torch.utils
 import torch.utils.data
 
+print("hello world!")
+
 
 def calc_pca_proj(x: torch.Tensor, n: int = 10) -> np.ndarray:
     """
