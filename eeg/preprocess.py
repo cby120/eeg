@@ -8,7 +8,7 @@ import numpy as np
 def get_label(task_id, event_id):
     if event_id == 0 or task_id in (1, 2):
         return 0
-    elif task_id == (3, 4, 7, 8, 11, 12):
+    elif task_id in (3, 4, 7, 8, 11, 12):
         if event_id == 1:
             return 1 # left fist
         else:
