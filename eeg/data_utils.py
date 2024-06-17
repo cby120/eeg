@@ -3,10 +3,13 @@ import torch
 import random
 import numpy as np
 from typing import List
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, RandomSampler, Subset, DataLoader
 
 N_TASKS = 14
 N_SUBJECTS = 109
+
+
+DataLoader()
 
 
 class EEGDatasetHYB(Dataset):
@@ -84,6 +87,7 @@ class EEGDataset(Dataset):
         :param train: 
         :param subjects: [1, 109] white list filter of subjects
         :param tasks: [1, 14] white list filter of tasks
+        :data shape: [T, C]
         """
         self._data_dir = os.path.abspath(data_dir) if not os.path.isabs(data_dir) else data_dir
         self._train = train
@@ -127,6 +131,12 @@ class EEGDataset(Dataset):
                 for event in os.listdir(os.path.join(subj_pth, task)):
                     label = int(event.split('_')[0])
                     self._meta_data.append((os.path.join(self._data_dir, subject, task, event), label))
+
+
+def get_random_subset(dataset: Dataset, n_samples: int):
+    sample_ind = list(RandomSampler(dataset, num_samples=n_samples))
+    # print(sample_ind)
+    return Subset(dataset, sample_ind)
 
 
 if __name__ == "__main__":
