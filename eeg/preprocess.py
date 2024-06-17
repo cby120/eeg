@@ -21,8 +21,8 @@ def get_label(task_id, event_Tid):
 
 
 # slice task into [T, D] samples
-def slice_task(path, subject_id, task_id):
-    raw_data = mne.io.read_raw_edf(path)
+def slice_task(src_pth, task_dir, task_id):
+    raw_data = mne.io.read_raw_edf(src_pth)
     events, _ = mne.events_from_annotations(raw_data)
     dataframe = raw_data.to_data_frame()
     for i in range(len(events)):
@@ -33,7 +33,7 @@ def slice_task(path, subject_id, task_id):
         label_perT = get_label(task_id, events[i][2])
         data_array = np.array(data_perT)
         # save one sample as an npz file
-        np.savez_compressed(f"../data/{subject_id:03d}/{task_id:02d}/{label_perT}_{i:02d}.npz", data=data_array)
+        np.savez_compressed(f"{task_dir}/{label_perT}_{i:02d}.npz", data=data_array)
 
 
 def data_conversion(src, tgt):
@@ -55,13 +55,13 @@ def data_conversion(src, tgt):
             # Iterate over task directory for each subject
             for task_path in os.listdir(os.path.join(src, subject_path)):
                 if re.match(task_pattern, task_path):
-                    path = os.path.join(src, subject_path, task_path)
+                    src_pth = os.path.join(src, subject_path, task_path)
                     matches = re.search(task_id_pattern, task_path)
                     task_id = int(matches[0].strip('R'))
                     task_dir = f"{tgt}/{subject_id:03d}/{task_id:02d}"
                     if not os.path.exists(task_dir):
                         os.makedirs(task_dir)
-                    slice_task(path, subject_id, task_id)
+                    slice_task(src_pth, task_dir, task_id)
 
 
 if __name__ == "__main__":

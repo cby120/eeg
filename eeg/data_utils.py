@@ -9,9 +9,6 @@ N_TASKS = 14
 N_SUBJECTS = 109
 
 
-DataLoader()
-
-
 class EEGDatasetHYB(Dataset):
     task_num = 14
     p = 0.9  # partition ratio of train and test set from full dataset
