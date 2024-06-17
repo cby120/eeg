@@ -5,16 +5,16 @@ import numpy as np
 
 
 # get label based on task id and event Tid
-def get_label(task_id, event_Tid):
-    if event_Tid in (0, 1, 2):
+def get_label(task_id, event_id):
+    if event_id == 0 or task_id in (1, 2):
         return 0
     elif task_id == (3, 4, 7, 8, 11, 12):
-        if event_Tid == 1:
+        if event_id == 1:
             return 1 # left fist
         else:
             return 2 # right fist
     else:
-        if event_Tid == 1:
+        if event_id == 1:
             return 3 # both fist
         else:
             return 4 # both feet
