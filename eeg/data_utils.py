@@ -7,6 +7,7 @@ from torch.utils.data import Dataset, RandomSampler, Subset, DataLoader
 
 N_TASKS = 14
 N_SUBJECTS = 109
+DURATION = 6.25e-3
 
 
 class EEGDatasetHYB(Dataset):
@@ -109,7 +110,7 @@ class EEGDataset(Dataset):
         data_path, label = self._meta_data[index]
         data = np.load(data_path)["data"]
         # print(list(data.keys()))
-        return torch.Tensor(data), torch.scalar_tensor(label)
+        return torch.Tensor(data), torch.scalar_tensor(label, dtype=torch.int)
 
     def load_func(self, subjects: List[int] = None, tasks: List[int] = None):
         if subjects is None:
