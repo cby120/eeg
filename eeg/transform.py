@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import numpy as np
 from typing import List
 # from scipy.signal import cwt, ricker
 from pywt import cwt
@@ -49,10 +50,13 @@ class CWT(nn.Module):
     :param sample: batched or unbatched sample data in tensor [[N,] T, C]
     :return: [[N,] T, C, F]
     """
-    def __init__(self, widths: List[int], *args, **kwargs) -> None:
+    def __init__(self, widths: List[int] = None, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.widths = widths
-    
+        if widths is not None:
+            self.widths = widths
+        else:
+            self.widths = np.round((np.exp(np.linspace(0, 2.5, 26)) - 1) * 30, 0).astype(int) + 1
+        
     def forward(self, sample: torch.Tensor):
         x, y = sample
         batched = True
@@ -61,8 +65,6 @@ class CWT(nn.Module):
             batched = False
         assert x.dim() == 3, "input must be 2d or 3d(batched) tensor"
         x = x.double().numpy()
-        # x: [N, T, C] => [N, C, T]
-        # x = x.transpose(1, 2)
         
         x_, freq = cwt(x, self.widths, "morl", axis=1)  # [F, N, T, C] 
         # print(x_.shape)
