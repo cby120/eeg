@@ -144,12 +144,10 @@ def get_random_subset(dataset: Dataset, n_samples: int):
 
 
 def trim_last(batch):
-    """_summary_
+    """
     collate_fn for dataloader
-    :param batch: _description_
-    :type batch: _type_
-    :return: _description_
-    :rtype: _type_
+    :param batch: List[Tuple[x, y], ...]
+    :return: batched data
     """
     x_list, y_list = tuple(zip(*batch))
     x_list: List[torch.Tensor]  # [T, C]

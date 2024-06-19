@@ -70,7 +70,39 @@ class CWT(nn.Module):
         # print(x_.shape)
         x_ = torch.tensor(x_).permute(1, 2, 3, 0)  # =>[N, T, C, F]
         x_ = x_ if batched else x_.squeeze(0)
-        return x_, y  # [N, T, C, F]
+        return x_, y  # [[N,] T, C, F]
+
+
+class PersudoFT(nn.Module):
+    """
+    perform wavelet transform to EEG data [[N,] T, C]
+    :param widths: sliding window widths for wavelet transformation
+        ~ T or 1/freq
+    :param sample: batched or unbatched sample data in tensor [[N,] T, C]
+    :return: [[N,] T, F]
+    """
+    def __init__(self, widths: List[int] = None, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        if widths is not None:
+            self.widths = widths
+        else:
+            self.widths = np.round((np.exp(np.linspace(0, 2.5, 26)) - 1) * 30, 0).astype(int) + 1
+        
+    def forward(self, sample: torch.Tensor):
+        x, y = sample
+        batched = True
+        if x.dim() == 2:  # unbatched data
+            x = x.unsqueeze(0)
+            batched = False
+        assert x.dim() == 3, "input must be 2d or 3d(batched) tensor"
+        x = x.double().numpy()
+        
+        x_, freq = cwt(x, self.widths, "morl", axis=1)  # [F, N, T, C] 
+        # print(x_.shape)
+        x_ = torch.tensor(x_).permute(1, 2, 0, 3)  # =>[N, T, F, C]
+        x_ = x_.std(dim=1)  # => [N, F, C]
+        x_ = x_ if batched else x_.squeeze(0)
+        return x_, y  # [[N,] F, C]
 
 
 if __name__ == "__main__":
