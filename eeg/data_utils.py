@@ -2,8 +2,9 @@ import os
 import torch
 import random
 import numpy as np
-from typing import List
-from torch.utils.data import Dataset, RandomSampler, Subset, DataLoader
+from typing import List, Union, Callable, Any
+from torch.utils.data import Dataset, RandomSampler, Subset
+from torch.utils import data
 
 N_TASKS = 14
 N_SUBJECTS = 109
@@ -76,6 +77,7 @@ class EEGDataset(Dataset):
         self,
         data_dir: str,
         train: bool = True,
+        transforms: Union[Callable, os.Iterable[Callable]] = None,
         subjects: List[int] = None,
         tasks: List[int] = None,
         shuffle: bool = True,
@@ -89,6 +91,13 @@ class EEGDataset(Dataset):
         """
         self._data_dir = os.path.abspath(data_dir) if not os.path.isabs(data_dir) else data_dir
         self._train = train
+        if transforms is not None:
+            if isinstance(transforms, Callable):
+                self.transforms = [transforms]
+            elif isinstance(transforms, os.Iterable):
+                self.transforms = list(transforms)
+            else:
+                raise ValueError("transforms must be Callable or Iterable of Callable")
         self._meta_data = []
 
         # load data based on different attribute
@@ -108,9 +117,13 @@ class EEGDataset(Dataset):
 
     def __getitem__(self, index: int):
         data_path, label = self._meta_data[index]
-        data = np.load(data_path)["data"]
+        data = torch.tensor(np.load(data_path)["data"])
+        label = torch.scalar_tensor(label, dtype=torch.int)
         # print(list(data.keys()))
-        return torch.Tensor(data), torch.scalar_tensor(label, dtype=torch.int)
+        if self.transforms is not None:
+            for t in self.transforms:
+                data = t(data)
+        return data, label
 
     def load_func(self, subjects: List[int] = None, tasks: List[int] = None):
         if subjects is None:
@@ -155,7 +168,7 @@ def trim_last(batch):
     min_len = len_list.min()
     x_list_ = [_[:min_len] for _ in x_list]
     return torch.stack(x_list_), torch.stack(y_list)
-    
+
 
 def trim_symm(batch):
     """
@@ -184,5 +197,5 @@ if __name__ == "__main__":
     # print(len(dataset))
     
     # dl = DataLoader(dataset, 10, collate_fn=trim_symm)
-    dl = DataLoader(dataset, 10, collate_fn=trim_last)
+    dl = data.DataLoader(dataset, 10, collate_fn=trim_last)
     print(next(iter(dl)))

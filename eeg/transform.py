@@ -57,8 +57,7 @@ class CWT(nn.Module):
         else:
             self.widths = np.round((np.exp(np.linspace(0, 2.5, 26)) - 1) * 30, 0).astype(int) + 1
         
-    def forward(self, sample: torch.Tensor):
-        x, y = sample
+    def forward(self, x: torch.Tensor):
         batched = True
         if x.dim() == 2:  # unbatched data
             x = x.unsqueeze(0)
@@ -70,7 +69,7 @@ class CWT(nn.Module):
         # print(x_.shape)
         x_ = torch.tensor(x_).permute(1, 2, 3, 0)  # =>[N, T, C, F]
         x_ = x_ if batched else x_.squeeze(0)
-        return x_, y  # [[N,] T, C, F]
+        return x_  # [[N,] T, C, F]
 
 
 class PersudoFT(nn.Module):
@@ -88,8 +87,7 @@ class PersudoFT(nn.Module):
         else:
             self.widths = np.round((np.exp(np.linspace(0, 2.5, 26)) - 1) * 30, 0).astype(int) + 1
         
-    def forward(self, sample: torch.Tensor):
-        x, y = sample
+    def forward(self, x: torch.Tensor):
         batched = True
         if x.dim() == 2:  # unbatched data
             x = x.unsqueeze(0)
@@ -102,7 +100,7 @@ class PersudoFT(nn.Module):
         x_ = torch.tensor(x_).permute(1, 2, 0, 3)  # =>[N, T, F, C]
         x_ = x_.std(dim=1)  # => [N, F, C]
         x_ = x_ if batched else x_.squeeze(0)
-        return x_, y  # [[N,] F, C]
+        return x_  # [[N,] F, C]
 
 
 if __name__ == "__main__":
@@ -111,7 +109,9 @@ if __name__ == "__main__":
     # print(d[1000][0].shape)
     f = CWT([1, 2, 3, 4, 5])
     # print(f(d[1000])[0].shape)
-    from torch.utils.data import DataLoader
+    from torch.utils.data import DataLoader, Data
+    import torch
+    DataLoader()
     # dl = DataLoader(d, 3, collate_fn=)
     # y = f(next(iter(dl)))
     y = f((torch.stack((d[10][0], d[10][0])), torch.stack((d[10][1], d[10][1]))))
