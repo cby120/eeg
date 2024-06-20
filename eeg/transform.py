@@ -78,6 +78,7 @@ class CWT(nn.Module):
 class PersudoFT(nn.Module):
     """
     perform wavelet transform to EEG data [[N,] T, C]
+    pass to dataset(transforms=...) directly or in Iterable
     :param widths: sliding window widths for wavelet transformation
         ~ T or 1/freq
     :param sample: batched or unbatched sample data in tensor [[N,] T, C]
@@ -107,6 +108,16 @@ class PersudoFT(nn.Module):
 
 
 class ICATransform(nn.Module):
+    """
+    Fit and apply ICA decomposition and dim reduction
+    pass to dataset(transforms=...) directly or in Iterable
+    :param dataset: EEG dataset, Subscrible[torch.Tensor[T, C]]
+    :param n_components: recommend range [15, 25]
+    :param x: torch.Tensor [T, C]
+    :return:
+        in forward or __call__
+        [T, C] => [T, n_components]
+    """
     def __init__(self, dataset: data.Dataset, n_samples: int = 1000, n_components = 20) -> None:
         super().__init__()
         self.n_samples = n_samples
@@ -124,7 +135,16 @@ class ICATransform(nn.Module):
     
 
 class PCATransform(nn.Module):
-    pca: PCA
+    """
+    Fit and apply PCA decomposition and dim reduction
+    pass to dataset(transforms=...) directly or in Iterable
+    :param dataset: EEG dataset, Subscrible[torch.Tensor[T, C]]
+    :param n_components: recommend range [10, 20]
+    :param x: torch.Tensor [T, C]
+    :return:
+        in forward or __call__
+        [T, C] => [T, n_components]
+    """
     def __init__(self, dataset: data.Dataset, n_samples: int = 1000, n_components = 20) -> None:
         super().__init__()
         self.n_samples = n_samples
