@@ -1,9 +1,12 @@
 import torch
 from torch import nn
+from torch.utils import data
 import numpy as np
 from typing import List
 # from scipy.signal import cwt, ricker
 from pywt import cwt
+from sklearn.decomposition import PCA, FastICA
+from .dim_reduction import get_random_subset
 
 
 class CWT_(nn.Module):
@@ -101,6 +104,41 @@ class PersudoFT(nn.Module):
         x_ = x_.std(dim=1)  # => [N, F, C]
         x_ = x_ if batched else x_.squeeze(0)
         return x_  # [[N,] F, C]
+
+
+class ICATransform(nn.Module):
+    def __init__(self, dataset: data.Dataset, n_samples: int = 1000, n_components = 20) -> None:
+        super().__init__()
+        self.n_samples = n_samples
+        self.n_components = n_components
+        self.ica = FastICA(n_components=n_components)
+        self.prepare(dataset)
+    
+    def prepare(self, dataset: data.Dataset):
+        subset = get_random_subset(dataset, self.n_samples)  # Iterable[Tensor[T, C]]
+        concat = torch.cat(list(x for x, y in subset), dim=0)  # Tensor[nT, C]
+        self.ica.fit(X=concat.cpu().double().numpy())
+    
+    def forward(self, x: torch.Tensor):
+        return torch.tensor(self.ica.transform(x.cpu().double().numpy()))
+    
+
+class PCATransform(nn.Module):
+    pca: PCA
+    def __init__(self, dataset: data.Dataset, n_samples: int = 1000, n_components = 20) -> None:
+        super().__init__()
+        self.n_samples = n_samples
+        self.n_components = n_components
+        self.pca = PCA(n_components=n_components)
+        self.prepare(dataset)
+    
+    def prepare(self, dataset: data.Dataset):
+        subset = get_random_subset(dataset, self.n_samples)  # Iterable[Tensor[T, C]]
+        concat = torch.cat(list(x for x, y in subset), dim=0)  # Tensor[nT, C]
+        self.pca.fit(X=concat.cpu().double().numpy())
+    
+    def forward(self, x: torch.Tensor):
+        return torch.tensor(self.pca.transform(x.cpu().double().numpy()))
 
 
 if __name__ == "__main__":
