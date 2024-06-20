@@ -2,7 +2,7 @@ import os
 import torch
 import random
 import numpy as np
-from typing import List, Union, Callable, Any
+from typing import List, Union, Callable, Any, Iterable
 from torch.utils.data import Dataset, RandomSampler, Subset
 from torch.utils import data
 
@@ -77,7 +77,7 @@ class EEGDataset(Dataset):
         self,
         data_dir: str,
         train: bool = True,
-        transforms: Union[Callable, os.Iterable[Callable]] = None,
+        transforms: Union[Callable, Iterable[Callable]] = None,
         subjects: List[int] = None,
         tasks: List[int] = None,
         shuffle: bool = True,
@@ -94,10 +94,12 @@ class EEGDataset(Dataset):
         if transforms is not None:
             if isinstance(transforms, Callable):
                 self.transforms = [transforms]
-            elif isinstance(transforms, os.Iterable):
+            elif isinstance(transforms, Iterable):
                 self.transforms = list(transforms)
             else:
                 raise ValueError("transforms must be Callable or Iterable of Callable")
+        else:
+            self.transforms = None
         self._meta_data = []
 
         # load data based on different attribute
