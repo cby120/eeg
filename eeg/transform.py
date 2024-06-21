@@ -6,43 +6,43 @@ from typing import List
 # from scipy.signal import cwt, ricker
 from pywt import cwt
 from sklearn.decomposition import PCA, FastICA
-from .dim_reduction import get_random_subset
+from data_utils import get_random_subset
 
 
-class CWT_(nn.Module):
-    """
-    perform wavelet transform to EEG data [[N,] T, C]
-    :param widths: sliding window widths for wavelet transformation
-        ~ T or 1/freq
-    :param sample: batched or unbatched sample data in tensor [[N,] T, C]
-    :return: [[N,] T, C, F]
-    """
-    def __init__(self, widths: List[int], *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.widths = widths
+# class CWT_(nn.Module):
+#     """
+#     perform wavelet transform to EEG data [[N,] T, C]
+#     :param widths: sliding window widths for wavelet transformation
+#         ~ T or 1/freq
+#     :param sample: batched or unbatched sample data in tensor [[N,] T, C]
+#     :return: [[N,] T, C, F]
+#     """
+#     def __init__(self, widths: List[int], *args, **kwargs) -> None:
+#         super().__init__(*args, **kwargs)
+#         self.widths = widths
     
-    def forward(self, sample: torch.Tensor):
-        x, y = sample
-        batched = True
-        if x.dim() == 2:  # unbatched data
-            x = x.unsqueeze(0)
-            batched = False
-        assert x.dim() == 3, "input must be 2d or 3d(batched) tensor"
-        # x: [N, T, C] => [N, C, T]
-        x = x.transpose(1, 2)
-        x_ = \
-        torch.stack(tuple(  # batch
-            torch.stack(tuple(  # channel
-                torch.tensor(
-                    # cwt(ch, ricker, self.widths)  # scipy [F, T]
-                    cwt(ch, self.widths, "morl")[0]  # pywt [F, T] (,T)
-                ) for ch in samp
-            ))  # [C, F, T]
-            for samp in x
-        ))  # [N, C, F, T]
-        x_ = x_.permute(0, 3, 1, 2)  # => [N, T, C, F]
-        x_ = x_ if batched else x_.squeeze(0)
-        return x_, y  # [N, T, C, F]
+#     def forward(self, sample: torch.Tensor):
+#         x, y = sample
+#         batched = True
+#         if x.dim() == 2:  # unbatched data
+#             x = x.unsqueeze(0)
+#             batched = False
+#         assert x.dim() == 3, "input must be 2d or 3d(batched) tensor"
+#         # x: [N, T, C] => [N, C, T]
+#         x = x.transpose(1, 2)
+#         x_ = \
+#         torch.stack(tuple(  # batch
+#             torch.stack(tuple(  # channel
+#                 torch.tensor(
+#                     # cwt(ch, ricker, self.widths)  # scipy [F, T]
+#                     cwt(ch, self.widths, "morl")[0]  # pywt [F, T] (,T)
+#                 ) for ch in samp
+#             ))  # [C, F, T]
+#             for samp in x
+#         ))  # [N, C, F, T]
+#         x_ = x_.permute(0, 3, 1, 2)  # => [N, T, C, F]
+#         x_ = x_ if batched else x_.squeeze(0)
+#         return x_, y  # [N, T, C, F]
 
 
 class CWT(nn.Module):
@@ -55,10 +55,11 @@ class CWT(nn.Module):
     """
     def __init__(self, widths: List[int] = None, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        channal = 5
         if widths is not None:
             self.widths = widths
         else:
-            self.widths = np.round((np.exp(np.linspace(0, 2.5, 26)) - 1) * 30, 0).astype(int) + 1
+            self.widths = np.round((np.exp(np.linspace(0, 2.5, channal)) - 1) * 30, 0).astype(int) + 1
         
     def forward(self, x: torch.Tensor):
         batched = True
